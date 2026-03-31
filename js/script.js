@@ -40,6 +40,9 @@ getImagesBtn.addEventListener('click', async () => {
   requestURL += `&start_date=${startInput.value}`;
   requestURL += `&end_date=${endInput.value}`;
 
+  // -- Request thumbnail
+  requestURL += '&thumbs=True';
+
   // -- Send GET request
   let nasaResponse = await fetch(requestURL);
   console.log(nasaResponse);
@@ -57,13 +60,41 @@ getImagesBtn.addEventListener('click', async () => {
   let gallery = document.getElementById('gallery');
   gallery.innerHTML = '';
 
-  nasaJson.forEach(imgObj => {
+  nasaJson.forEach(mediaObj => {
     let galleryItem = document.createElement('div');
     galleryItem.className = 'gallery-item';
 
-    let itemImg = document.createElement('img');
-    itemImg.setAttribute("src", imgObj.url);
-    galleryItem.appendChild(itemImg);
+    if(mediaObj.media_type === 'video')
+    {
+      // Create the video tag, which does not contain the actual URL source
+      let itemVid = document.createElement('video');
+      itemVid.setAttribute('controls', 'true');
+
+      // Determine the file format of the video to ensure the source tag is defined correctly
+      let srcUrl = new URL(mediaObj.url);
+      let srcExtIndex = srcUrl.pathname.lastIndexOf('.');
+      let srcExt = srcExtIndex == -1 ? 'mp4' : srcUrl.pathname.substring(srcExtIndex+1);
+
+      // Create a source tag that will be added to the video tag to provide the video's source file
+      let itemSrc = document.createElement('source');
+      itemSrc.setAttribute('src', mediaObj.url);
+      itemSrc.setAttribute('type', 'video/'+srcExt);
+      itemVid.appendChild(itemSrc);
+
+      galleryItem.appendChild(itemVid);
+    }
+    else
+    {
+      // Create the img tag, which contains the URL source
+      let itemImg = document.createElement('img');
+      itemImg.setAttribute("src", mediaObj.url);
+      galleryItem.appendChild(itemImg);
+    }
+
+    // Create the paragraph that will hold information on the image/video
+    let infoPg = document.createElement('p');
+    infoPg.innerHTML = `<h3>${mediaObj.title}</h3><br/>${mediaObj.date}`;
+    galleryItem.appendChild(infoPg);
 
     gallery.appendChild(galleryItem);
   });
